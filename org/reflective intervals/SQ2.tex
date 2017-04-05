@@ -1,0 +1,67 @@
+\documentclass{jarticle}
+\pagestyle{plain}
+
+\flushbottom
+%\raggedbottom
+\textheight 24cm
+\textwidth 16cm
+\textfloatsep 30pt plus 3pt minus 6pt
+\parskip 7.5pt plus 1pt minus 1pt
+\oddsidemargin 0mm
+\evensidemargin 0mm
+\topmargin 0mm
+\headheight 0mm
+\headsep 0mm
+\parindent 0mm
+
+%\markright{\tt [\jobname.tex]}
+
+% Hanging Paragraph
+\def\XP{\par\begingroup\parindent 0in\everypar{\hangindent .3in}}
+\def\eXP{\par\endgroup}
+
+% Left Justified Paragraph
+\def\LP{\par\begingroup\parindent 0in\everypar{\hangindent 0in}}
+\def\eLP{\par\endgroup}
+
+\begin{document}
+\thispagestyle{empty}
+
+\LP
+%\rule[6pt]{16cm}{1pt}\\
+\Large \bf コードの技法：弦楽四重奏曲第2番 「Reflective Intervals (反映的音程)」 \rm \normalsize\\
+\rule[6pt]{16cm}{2pt}\\
+\bf 久保田晃弘(composition, programming)\rm \\
+\eLP
+
+
+アルゴリズミックに作曲され、プログラムコード\footnote{ChucKプログラミング言語 \texttt{http://chuck.cs.princeton.edu/}}で記述された音響弦楽四重奏曲である。各弦楽器の音は、物理モデリング\footnote{オープンソースの音響処理/合成ソフトウェア STK(Synthesis ToolKit) \texttt{http://ccrma.stanford.edu/software/stk/}}により合成されている。
+
+多くのアルゴリズミック・コンポジションは主に音程やリズム、ハーモニーといった音楽構造を作曲するが、この曲は主に奏法、すなわち演奏構造を作曲する。
+
+構造はアルゴリズムとしてコードに記述され、コードを実行することによってパラメータの値(スケール)が決定する。プログラムが実行されている限り、音楽は果てしなく続く。\\
+
+2台のバイオリン、ヴィオラ、チェロは440HzのA\footnote{五線譜第2間の「ラ」の音}の音を基準に、通常の音程でチューニングされている。
+
+各奏者は開放弦と、耳(マイク入力)から得られる音程の2つの高さの音だけを用い、そのいずれかをそれぞれ1/2の確率で選択する。
+
+同時に奏者は弦を弾くか弾かないか、ダブル・ストップ\footnote{隣あった２つの弦を同時に弾いて和音を演奏する奏法}を行うかどうかを、同じく1/2の確率で選択する。\\
+
+持続と反復に関するパラメータ\footnote{弓を引く長さと反復回数}、奏法に関するパラメータ\footnote{弓を引く位置と強さ、ビブラートの周波数と深さ}、楽器の配置や空間に関するパラメータ\footnote{各楽器のチャンネル、ボリュームとリバーブ音のミックスレベル}は、プログラム・コードの中に記述されている。\\
+
+奏法は主にスル・ポンティチェロ\footnote{駒のごく近くの部分の弦を弓で演奏することにより、通常よりも高次倍音が多く含まれる音を出し、軋んだような感覚を得る奏法}を用い、
+ミニマルな音楽構造と特殊奏法を組み合せることで、楽器自身が持っている潜在的な音響特性を際立たせる。
+
+\vspace{1cm}
+\subsection*{映像「Stochastic Movie (確率映画)」}
+
+インターネット・アーカイヴ\footnote{\texttt{http://www.archive.org/}}にアップロードされているクリエイティヴ・コモンズ/オープンソース・ムービーの中から約60本をセレクトし、それらを確率的に同時に2本再生する。マイク入力のアタックを検出し、それをトリガーとして再生位置や画面の向きが変化する。
+
+
+
+
+
+
+
+\end{document}
+

@@ -1,0 +1,199 @@
+//
+// string quartet op.1
+//
+// akihiro kubota (2006)
+//
+
+// define instruments
+
+// violin1
+Bowed s11 => pan2 p1 => JCRev r => dac;
+Bowed s12 => p1;
+Bowed s13 => p1;
+Bowed s14 => p1;
+
+// violin2
+Bowed s21 => pan2 p2 => r;
+Bowed s22 => p2;
+Bowed s23 => p2;
+Bowed s24 => p2;
+
+// viola
+Bowed s31 => pan2 p3 => r;
+Bowed s32 => p3;
+Bowed s33 => p3;
+Bowed s34 => p3;
+
+// cello
+Bowed s41 => pan2 p4 => r;
+Bowed s42 => p4;
+Bowed s43 => p4;
+Bowed s44 => p4;
+
+// gain settings
+1.0 => s11.gain;
+1.0 => s12.gain;
+1.0 => s13.gain;
+1.0 => s14.gain;
+
+1.0 => s21.gain;
+1.0 => s22.gain;
+1.0 => s23.gain;
+1.0 => s24.gain;
+
+1.0 => s31.gain;
+1.0 => s32.gain;
+1.0 => s33.gain;
+1.0 => s34.gain;
+
+1.0 => s41.gain;
+1.0 => s42.gain;
+1.0 => s43.gain;
+1.0 => s44.gain;
+
+// pan settings
+std.rand2f( 0, 1 ) => p1.pan;
+std.rand2f( 0, 1 ) => p2.pan;
+std.rand2f( 0, 1 ) => p3.pan;
+std.rand2f( 0, 1 ) => p4.pan;
+<<< "---", "" >>>;
+<<< "pan1:", p1.pan() >>>;
+<<< "pan2:", p2.pan() >>>;
+<<< "pan3:", p3.pan() >>>;
+<<< "pan4:", p4.pan() >>>;
+
+// reverb settings
+1.0 => r.gain;
+0.25 => r.mix;
+
+// open string frequency
+440.0 => float base;
+
+base / 2 / 1.5 / 1.5 => float f11;
+base / 2 / 1.5 => float f12;
+base / 2 => float f13;
+base / 2 * 1.5 => float f14;
+
+base / 2 / 1.5 / 1.5 => float f21;
+base / 2 / 1.5 => float f22;
+base / 2 => float f23;
+base / 2 * 1.5 => float f24;
+
+base / 2 / 1.5 / 1.5 / 1.5 => float f31;
+base / 2 / 1.5 / 1.5 => float f32;
+base / 2 / 1.5 => float f33;
+base / 2 => float f34;
+
+base / 2 / 2 / 1.5 / 1.5 / 1.5 => float f41;
+base / 2 / 2 / 1.5 / 1.5 => float f42;
+base / 2 / 2 / 1.5 => float f43;
+base / 2 / 2 => float f44;
+
+
+// play a string
+fun void playString(Bowed s, float f, float pr, float po, float vf, float vg, float v, float on) {
+	f => s.freq;
+	pr => s.bowPressure;
+	po => s.bowPosition;
+	vf => s.vibratoFreq;
+	vg => s.vibratoGain;
+	v => s.volume;
+	on => s.noteOn;
+	// print parameters
+	<<< "---", me.id() >>>;
+	<<< "frequency:", s.freq() >>>;
+	<<< "bow pressure:", s.bowPressure() >>>;
+	<<< "bow position:", s.bowPosition() >>>;
+	<<< "vibrato freq:", s.vibratoFreq() >>>;
+	<<< "vibrato gain:", s.vibratoGain() >>>;
+	<<< "volume:", s.volume() >>>;
+	<<< "noteon:", on >>>;
+}
+
+// violin1
+fun void violin1(){
+	[s11, s12, s13, s14] @=> Bowed s1[];
+	[f11, f12, f13, f14] @=> float f1[];
+	int i; float pr; float po; float vf; float vg; float v; float on; dur d;
+	while (true) {
+		std.rand2(0, 3) => i;
+		std.rand2f(0.01, 0.1) => pr;
+		std.rand2f(0.01, 0.1) => po;
+		std.rand2f(0.01, 0.1) => vf;
+		std.rand2f(0.01, 0.1) => vg;
+		std.rand2f(0.01, 0.1) => v;
+		if (maybe) { 0.0 => on; } else { 1.0 => on; }
+		playString(s1[i], f1[i], pr, po, vf, vg, v, on);
+		// advance time
+		std.rand2f(4.0, 6.0)::second => d;
+		d => now;
+	}
+}
+
+// violin2
+fun void violin2(){
+	[s21, s22, s23, s24] @=> Bowed s2[];
+	[f21, f22, f23, f24] @=> float f2[];
+	int i; float pr; float po; float vf; float vg; float v; float on; dur d;
+	while (true) {
+		std.rand2(0, 3) => i;
+		std.rand2f(0.01, 0.1) => pr;
+		std.rand2f(0.01, 0.1) => po;
+		std.rand2f(0.01, 0.1) => vf;
+		std.rand2f(0.01, 0.1) => vg;
+		std.rand2f(0.01, 0.1) => v;
+		if (maybe) { 0.0 => on; } else { 1.0 => on; }
+		playString(s2[i], f2[i], pr, po, vf, vg, v, on);
+		// advance time
+		std.rand2f(6.0, 8.0)::second => d;
+		d => now;
+	}
+}
+
+// viola
+fun void viola(){
+	[s31, s32, s33, s34] @=> Bowed s3[];
+	[f31, f32, f33, f34] @=> float f3[];
+	int i; float pr; float po; float vf; float vg; float v; float on; dur d;
+	while (true) {
+		std.rand2(0, 3) => i;
+		std.rand2f(0.01, 0.1) => pr;
+		std.rand2f(0.01, 0.1) => po;
+		std.rand2f(0.01, 0.1) => vf;
+		std.rand2f(0.01, 0.1) => vg;
+		std.rand2f(0.01, 0.1) => v;
+		if (maybe) { 0.0 => on; } else { 1.0 => on; }
+		playString(s3[i], f3[i], pr, po, vf, vg, v, on);
+		// advance time
+		std.rand2f(10.0, 12.0)::second => d;
+		d => now;
+	}
+}
+
+// cello
+fun void cello(){
+	[s41, s42, s43, s44] @=> Bowed s4[];
+	[f41, f42, f43, f44] @=> float f4[];
+	int i; float pr; float po; float vf; float vg; float v; float on; dur d;
+	while (true) {
+		std.rand2(0, 3) => i;
+		std.rand2f(0.01, 0.1) => pr;
+		std.rand2f(0.01, 0.1) => po;
+		std.rand2f(0.01, 0.1) => vf;
+		std.rand2f(0.01, 0.1) => vg;
+		std.rand2f(0.01, 0.1) => v;
+		if (maybe) { 0.0 => on; } else { 1.0 => on; }
+		playString(s4[i], f4[i], pr, po, vf, vg, v, on);
+		// advance time
+		std.rand2f(14.0, 16.0)::second => d;
+		d => now;
+	}
+}
+
+Event e;
+// sound generation
+spork ~ violin1();
+spork ~ violin2();
+spork ~ viola();
+spork ~ cello();
+e => now;

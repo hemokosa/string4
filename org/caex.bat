@@ -1,0 +1,1 @@
+C:\WINDOWS\system32\chuck.exe "C:\Documents and Settings\Administrator\My Documents\string4\caex.ck"
