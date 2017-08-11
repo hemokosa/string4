@@ -41,7 +41,7 @@ fun void playString(Bowed s) {
 		std.rand2f( 0.0, 0.01 ) => s.bowPosition;
 		std.rand2f( 0.0, 0.01 ) => s.vibratoFreq;
 		std.rand2f( 0.0, 0.01 ) => s.vibratoGain;
-		std.rand2f( 0.05, 0.1 ) => s.volume;
+		std.rand2f( 0.1, 0.25 ) => s.volume;
 		1.0 => s.noteOn;
 		// print
 		<<< "---", s >>>;
