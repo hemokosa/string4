@@ -16,6 +16,9 @@ JCRev r[4];
 // envelope
 ADSR e[4][2];
 
+// dynamic processor
+Dyno dy;
+
 // fft
 adc => LPF lpf => FFT fft => blackhole;
 
@@ -29,7 +32,6 @@ second / samp => float srate;
 
 // listening
 base => float pitch;
-0.0 => float volume;
 pitch/base => float ratio;
 
 fun void listening() {
@@ -118,6 +120,8 @@ fun int snumber(int i, int n, int j) {
 // bowPressure
 [
 [0.9, 0.8, 0.7, 0.6, 0.5],
+[0.5, 0.9, 0.6, 0.8, 0.7],
+[0.7, 0.8, 0.6, 0.9, 0.5],
 [0.5, 0.6, 0.7, 0.8, 0.9]
 ] @=> float pr[][];
 fun float bpressure(int i, int n) {
@@ -128,7 +132,7 @@ fun float bpressure(int i, int n) {
 [
 [0.01, 0.99],
 [0.1, 0.9],
-[0.02, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98],
+[0.02, 0.1, 0.5, 0.9, 0.98],
 [0.02, 0.04, 0.06, 0.08, 0.1, 0.9, 0.92, 0.94, 0.96, 0.98],
 [0.05, 0.5, 0.95]
 ] @=> float po[][];
@@ -155,31 +159,11 @@ fun float vgain(int i, int n) {
 }
 
 // configurations
-//
-// channels
-int ich;
-[
-[0, 1, 1, 0],
-[0, 0, 1, 1],
-[0, 1, 0, 1],
-[1, 1, 0, 0],
-[1, 0, 1, 0],
-[1, 0, 0, 1]
-] @=> int ch[][];
-fun int channel(int i, int n) {
-    return ch[i%ch.cap()][n%ch[i%ch.cap()].cap()];
-}
 
 // distance
-[ 0.1, 0.2, 0.3 ] @=> float dis[];
+[ 0.2, 0.3, 0.4 ] @=> float dis[];
 fun float distance(int i) {
     return dis[i%dis.cap()];
-}
-
-// repeat
-[2, 3, 5, 7, 11] @=> int nmax[];
-fun int repetition(int i) {
-    return nmax[i%nmax.cap()];
 }
 
 // duration
@@ -194,43 +178,44 @@ fun float duration(int i, int n) {
     return dr[i%dr.cap()][n%dr[i%dr.cap()].cap()];
 }
 
-// play or not (stochastic)
-0.2 => float onoff0;
-0.2 => float onoff1;
-
-// gain of strings
-for( 0 => int i; i < 4 ; i++ ) {
-    for( 0 => int j; j < 2 ; j++ ) 0.5 => s[i][j].gain;
+// repeat
+[1, 2, 3, 4] @=> int nmax[];
+fun int repetition(int i) {
+    return nmax[i%nmax.cap()];
 }
 
-// gain of reverberation
-for( 0 => int i; i < 4 ; i++ ) 0.5 => r[i].gain;
+// play or not (stochastic)
+0.5 => float onoff0;
+0.0 => float onoff1;
 
+// limiter
+dy.limit();
+1.0 => dy.gain;
 
 // play a string
 fun void play(Bowed s, ADSR e, float f, float d, float pr, float po, float vf, float vg, float vol, int onoff) {
-    float at; float rl;
+    float at; float sl; float rl;
     
     f => s.freq;
     pr => s.bowPressure;
     po => s.bowPosition;
     vf => s.vibratoFreq;
     vg => s.vibratoGain;
-    vol => s.volume;
     
-    Std.rand2f(0.1, 0.2) => at;
-    Std.rand2f(1.0, 2.5) => rl;
-    
-    e.set(at, 0.1, Std.rand2f(0.8, 1.0), rl);   
+    Math.random2f(0.1, 0.2) => at;
+    Math.random2f(5.0, 10.0) => rl;
+    Math.random2f(0.8, 1.0) => sl;
+     
+    e.set(at, 0.1, sl, rl);   
     if (onoff == 1)
     {
-        1.0 => s.noteOn;
+        vol => s.noteOn;
         e.keyOn();
     }
     else
     {
         e.keyOff(); 
-        3.0::second => now;
+        10.0::second => now;
         0.0 => s.noteOff;
     }
 
@@ -246,32 +231,38 @@ fun void play(Bowed s, ADSR e, float f, float d, float pr, float po, float vf, f
         <<< "bow position:", s.bowPosition() >>>;
         <<< "vibrato freq:", s.vibratoFreq() >>>;
         <<< "vibrato gain:", s.vibratoGain() >>>;
-        <<< "volume:", s.volume() >>>;
+        <<< "volume:", vol >>>;
     }
 }
 
 // instruments
 fun void instrument(int k){
     int i0; int i1; int n; float d; float rt; float pr0; float po0; float vf0; float vg0; float vol0; int on0; int on1;
+    float dist; int ichan;
     // ugen connections
-    s[k][0] => e[k][0] => r[k] => dac.chan(channel(ich, k));
+    Math.random2(0, 1) => ichan;
+    <<< "channel:", ichan >>>;
+    s[k][0] => e[k][0] => r[k] => dy => dac.chan(ichan);
     s[k][1] => e[k][1] => r[k];
     
+    0.25 => s[k][0].gain;
+    0.25 => s[k][1].gain;
+    0.5 => r[k].gain;
+    0.5 => r[k].mix;
+    
     // select patterns
-    Std.rand2(0, sn.cap()-1) => int isn;
-    Std.rand2(0, pr.cap()-1) => int ipr;
-    Std.rand2(0, po.cap()-1) => int ipo;
-    Std.rand2(0, vf.cap()-1) => int ivf;
-    Std.rand2(0, vg.cap()-1) => int ivg;
-    Std.rand2(0, dr.cap()-1) => int idur;
-    repetition(Std.rand2(0, nmax.cap()-1)) => int nm;
+    Math.random2(0, sn.cap()-1) => int isn;
+    Math.random2(0, pr.cap()-1) => int ipr;
+    Math.random2(0, po.cap()-1) => int ipo;
+    Math.random2(0, vf.cap()-1) => int ivf;
+    Math.random2(0, vg.cap()-1) => int ivg;
+    Math.random2(0, dr.cap()-1) => int idur;
+    repetition(Math.random2(0, nmax.cap()-1)) => int nm;
 
-    // distance (reverbration)
-    1.0 - distance(Std.rand2(0, dis.cap()-1)) => vol0;
-    1.0 - vol0 => r[k].mix;
-    <<< "distance:", 1.0 - vol0 >>>;
-    
-    
+    // distance (volume)
+    distance(Math.random2(0, dis.cap()-1)) => dist;  
+    1.0 - dist => vol0;       
+        
     for( 0 => n; n < nm; n++ ) {
         snumber(isn, n, 0) => i0;
         snumber(isn, n, 1) => i1;
@@ -287,11 +278,11 @@ fun void instrument(int k){
         listening();
         
         // first string
-        if (Std.randf() > onoff0) {
+        if (Math.randomf() > onoff0) {
             play(s[k][0], e[k][0], f[k][i0]*ratio, d, pr0, po0, vf0, vg0, vol0, 1);
             // second string (double-stop)
-            Std.rand2f(0.0, 3.0)::second => now;
-            if (Std.randf() > onoff1) {
+            Math.random2f(0.0, 3.0)::second => now;
+            if (Math.randomf() > onoff1) {
                 play(s[k][1], e[k][1], f[k][i1]*ratio, d, pr0, po0, vf0, vg0, vol0, 1);
             }
         }
@@ -302,17 +293,15 @@ fun void instrument(int k){
         // stop playing
         e[k][0].keyOff();
         e[k][1].keyOff();
-        3.0::second => now;
+        13.0::second => now;
         0.0 => s[k][0].noteOff;
-        0.0 => s[k][1].noteOff;
-        
+        0.0 => s[k][1].noteOff;    
     }
+    me.exit(); 
 }
 
 // main
-120.0 => float tdur;
 while(true){
-    Std.rand2(0, ch.cap()-1) => ich;
     for( 0 => int i; i < 4 ; i++ ) spork ~ instrument(i);
-    tdur::second => now;
+    Math.random2f(130.0, 180.0)::second => now;
 }
