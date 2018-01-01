@@ -1,9 +1,8 @@
 //
-// quartet for algorithmic strings op.5, 
-// "Music for Library"
-// akihiro kubota, 2017
+// code quartet for algorithmic strings op.5.1
+// akihiro kubota, 2006-2017
 //
-// coded by ChucK : Strongly-timed, Concurrent, and On-the-fly Music Programming Language 
+// coded by ChucK program
 //
 
 // basic frequency;
@@ -12,12 +11,6 @@
 // strings
 Bowed s[4][2];
 JCRev r[4];
-
-// envelope
-ADSR e[4][2];
-
-// dynamic processor
-Dyno dy;
 
 // fft
 adc => LPF lpf => FFT fft => blackhole;
@@ -32,6 +25,7 @@ second / samp => float srate;
 
 // listening
 base => float pitch;
+0.0 => float volume;
 pitch/base => float ratio;
 
 fun void listening() {
@@ -61,6 +55,7 @@ fun void listening() {
     if (tmp < base) { while (tmp < base) tmp * 2 => tmp; }
     tmp/base => ratio;
 }
+
 
 // tuning
 float f[4][4];
@@ -101,7 +96,7 @@ fun void tuning4(float base) {
 }
 tuning4(base);
 
-// composition as executions
+// compositions
 //
 // stringNumber
 [
@@ -109,7 +104,6 @@ tuning4(base);
 [[3, 2], [2, 1], [1, 0]],
 [[0, 1], [3, 2]],
 [[1, 2], [2, 1]],
-[[2, 3], [1, 0]],
 [[0, 1]],
 [[3, 2]]
 ] @=> int sn[][][];
@@ -119,22 +113,23 @@ fun int snumber(int i, int n, int j) {
 
 // bowPressure
 [
-[0.8, 0.7, 0.6, 0.5, 0.4],
-[0.4, 0.5, 0.6, 0.8, 0.7],
-[0.7, 0.3, 0.6, 0.5],
-[0.5, 0.4, 0.7, 0.8]
+[0.1, 0.9],
+[0.9, 0.8, 0.7],
+[0.1, 0.05, 0.1],
+[0.1, 0.3, 0.5, 0.7, 0.9],
+[0.9, 0.7, 0.5, 0.3, 0.1]
 ] @=> float pr[][];
 fun float bpressure(int i, int n) {
     return pr[i%pr.cap()][n%pr[i%pr.cap()].cap()];
 }
 
-// bowPosition (sul ponticello)
+// bowPosition
 [
-[0.1, 0.5, 0.9],
-[0.1, 0.9],
-[0.1, 0.2, 0.3, 0.9],
-[0.1, 0.2, 0.8, 0.9],
-[0.1, 0.2, 0.5]
+[0.1, 0.5],
+[0.1, 0.2],
+[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+[0.1, 0.2, 0.4, 0.6, 0.8],
+[0.1, 0.8, 0.6, 0.4, 0.2]
 ] @=> float po[][];
 fun float bposition(int i, int n) {
     return po[i%po.cap()][n%po[i%po.cap()].cap()];
@@ -142,8 +137,8 @@ fun float bposition(int i, int n) {
 
 // vibratoFreq
 [
-[0.01, 0.015, 0.02, 0.025, 0.03],
-[0.03, 0.025, 0.02, 0.015, 0.01]
+[0.01, 0.02, 0.03, 0.04, 0.05],
+[0.05, 0.04, 0.03, 0.02, 0.01]
 ] @=> float vf[][];
 fun float vfrequency(int i, int n) {
     return vf[i%vf.cap()][n%vf[i%vf.cap()].cap()];
@@ -151,118 +146,107 @@ fun float vfrequency(int i, int n) {
 
 // vibratoGain
 [
-[0.02, 0.04, 0.06, 0.08, 0.1],
-[0.1, 0.08, 0.06, 0.04, 0.02]
+[0.1, 0.02, 0.03, 0.04, 0.05],
+[0.05, 0.04, 0.03, 0.02, 0.01]
 ] @=> float vg[][];
 fun float vgain(int i, int n) {
     return vg[i%vg.cap()][n%vg[i%vg.cap()].cap()];
 }
 
 // configurations
+//
+// channels
+int ich;
 
-// distance
-[ 0.2, 0.3, 0.4, 0.5] @=> float dis[];
-fun float distance(int i) {
-    return dis[i%dis.cap()];
+// volume (distance)
+[
+[0.1],
+[0.2],
+[0.3],
+[0.4],
+[0.5]
+] @=> float vol[][];
+fun float distance(int i, int n) {
+    return vol[i%vol.cap()][n%vol[i%vol.cap()].cap()];
+}
+
+// reverberation mix level
+[
+[0.1],
+[0.2],
+[0.3],
+[0.4],
+[0.5]
+] @=> float rev[][];
+fun float revmix(int i, int n) {
+    return rev[i%rev.cap()][n%rev[i%rev.cap()].cap()];
+}
+
+// repeat
+[ 2, 3, 5, 7, 11 ] @=> int nmax[];
+fun int repetition(int i) {
+    return nmax[i%nmax.cap()];
 }
 
 // duration
 [
-[5.0, 7.0, 11.0, 13.0, 17.0, 23.0],
-[23.0, 17.0, 13.0, 11.0, 7.0, 5.0],
-[20.0, 10.0, 30.0],
-[5.0, 30.0, 10.0],
-[10.0, 15.0, 20.0]
+[5.0, 7.0, 11.0, 13.0, 17.0],
+[17.0, 13.0, 11.0, 7.0, 5.0],
+[10.0, 20.0],
+[30.0, 5.0],
+[15.0, 20.0, 10.0]
 ] @=> float dr[][];
 fun float duration(int i, int n) {
     return dr[i%dr.cap()][n%dr[i%dr.cap()].cap()];
 }
 
-// repeat
-[1, 2, 3, 4, 5] @=> int nmax[];
-fun int repetition(int i) {
-    return nmax[i%nmax.cap()];
-}
-
 // play or not (stochastic)
-0.5 => float onoff0;
+0.2 => float onoff0;
 0.5 => float onoff1;
 
-// limiter
-dy.limit();
-0.5 => dy.gain;
-
 // play a string
-fun void play(Bowed s, ADSR e, float f, float d, float pr, float po, float vf, float vg, float vol, int onoff) {
-    float at; float sl; float rl;
-    
+fun void play(Bowed s, float f, float pr, float po, float vf, float vg, float vol, int onoff) {
+    if (f < 0.0) 0 => onoff;
     f => s.freq;
     pr => s.bowPressure;
     po => s.bowPosition;
     vf => s.vibratoFreq;
     vg => s.vibratoGain;
-    
-    Math.random2f(0.1, 0.2) => at;
-    Math.random2f(5.0, 10.0) => rl;
-    Math.random2f(0.8, 1.0) => sl;
-     
-    e.set(at, 0.1, sl, rl);   
-    if (onoff == 1)
-    {
-        vol => s.noteOn;
-        e.keyOn();
-    }
-    else
-    {
-        e.keyOff(); 
-        10.0::second => now;
-        0.0 => s.noteOff;
-    }
-
+    vol => s.volume;
+    if (onoff == 1) 1 => s.noteOn; else 0 => s.noteOff;
     // print parameters
     if (onoff == 1) {
         <<< "---", me.id() >>>;
         <<< "pitch:", pitch, "ratio:", ratio >>>;
         <<< "frequency:", s.freq() >>>;
-        <<< "attack:", at >>>;
-        <<< "duration:", d >>>;
-        <<< "release:", rl >>>;
         <<< "bow pressure:", s.bowPressure() >>>;
         <<< "bow position:", s.bowPosition() >>>;
         <<< "vibrato freq:", s.vibratoFreq() >>>;
         <<< "vibrato gain:", s.vibratoGain() >>>;
-        <<< "volume:", vol >>>;
+        <<< "volume:", s.volume() >>>;
     }
 }
 
 // instruments
 fun void instrument(int k){
-    int i0; int i1; int n; float d; float rt; float pr0; float po0; float vf0; float vg0; float vol0; int on0; int on1;
-    float dist; int ichan;
+    int i0; int i1; int n; float d; float pr0; float po0; float vf0; float vg0; float vol0; int on0; int on1;
     // ugen connections
-    Math.random2(0, 3) => ichan;
-    <<< "channel:", ichan >>>;
-    s[k][0] => e[k][0] => r[k] => dy => dac.chan(ichan);
-    s[k][1] => e[k][1] => r[k];
-    
+    Math.random2(0, 1) => ich;
+    s[k][0] => r[k] => dac.chan(ich);
+    s[k][1] => r[k];
     0.1 => s[k][0].gain;
     0.1 => s[k][1].gain;
-    0.2 => r[k].gain;
-    0.5 => r[k].mix;
-    
+    1.0 => r[k].gain;
     // select patterns
     Math.random2(0, sn.cap()-1) => int isn;
     Math.random2(0, pr.cap()-1) => int ipr;
     Math.random2(0, po.cap()-1) => int ipo;
     Math.random2(0, vf.cap()-1) => int ivf;
     Math.random2(0, vg.cap()-1) => int ivg;
+    Math.random2(0, vol.cap()-1) => int ivol;
+    Math.random2(0, rev.cap()-1) => int irev;
     Math.random2(0, dr.cap()-1) => int idur;
     repetition(Math.random2(0, nmax.cap()-1)) => int nm;
-
-    // distance (volume)
-    distance(Math.random2(0, dis.cap()-1)) => dist;  
-    0.8 - dist => vol0;       
-        
     for( 0 => n; n < nm; n++ ) {
         snumber(isn, n, 0) => i0;
         snumber(isn, n, 1) => i1;
@@ -270,42 +254,32 @@ fun void instrument(int k){
         bposition(ipo, n) => po0;
         vfrequency(ivf, n) => vf0;
         vgain(ivg, n) => vg0;
-
-        // duration
-        duration(idur, n) => d;
-        
+        distance(ivol, n) => vol0;
+        // reverbration
+        revmix(irev, n) => r[k].mix;
         // listening
         listening();
-        
+        // play or not
+        if (Math.randomf() > onoff0) { 0 => on0; 0 => on1; } 
+        else { 1 => on0; if (Math.randomf() > onoff1) { 0 => on1; } else { 1 => on1; } }
         // first string
-        if (Math.randomf() > onoff0) {
-            Math.random2f(0.0, 3.0)::second => now;
-            play(s[k][0], e[k][0], f[k][i0]*ratio, d, pr0, po0, vf0, vg0, vol0, 1);
-            // second string (double-stop)           
-            if (Math.randomf() > onoff1) {
-                Math.random2f(0.0, 3.0)::second => now;
-                play(s[k][1], e[k][1], f[k][i1]*ratio, d, pr0, po0, vf0, vg0, vol0, 1);
-            }
-        } else {
-            play(s[k][0], e[k][0], f[k][i0]*ratio, d, pr0, po0, vf0, vg0, vol0, 0);
-            play(s[k][1], e[k][1], f[k][i1]*ratio, d, pr0, po0, vf0, vg0, vol0, 0);
-        }
-        
+        play(s[k][0], f[k][i0]*ratio, pr0, po0, vf0, vg0, vol0, on0);
+        // second string (double-stop)
+        Math.random2f(0.0, 5.0)::second => now;
+        play(s[k][1], f[k][i1]*ratio, pr0, po0, vf0, vg0, vol0, on1);
         // advance time
+        duration(idur, n) => d;
         d::second => now;
-        
         // stop playing
-        e[k][0].keyOff();
-        e[k][1].keyOff();
-        18.0::second => now;
-        0.0 => s[k][0].noteOff;
-        0.0 => s[k][1].noteOff;    
+        play(s[k][0], f[k][i0], 0.01, 0.01, 0.01, 0.01, 0.0, 0);
+        play(s[k][1], f[k][i1], 0.01, 0.01, 0.01, 0.01, 0.0, 0);
+        Math.random2f(0.0, 5.0)::second => now;
     }
-    me.exit(); 
 }
 
 // main
+Math.random2f(120.0, 180.0) => float tdur;
 while(true){
     for( 0 => int i; i < 4 ; i++ ) spork ~ instrument(i);
-    Math.random2f(130.0, 180.0)::second => now;
+    tdur::second => now;
 }
